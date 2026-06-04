@@ -1,0 +1,31 @@
+import tkinter as tk
+import random
+import json
+
+class ShapeGame:
+    def __init__(self):
+        self.window = tk.Tk()
+        self.window.title("ФИГУРНЫЙ КЛИКЕР")
+        self.window.geometry("900x650")
+        self.window.resizable(False, False)
+        
+        self.score = 0
+        self.game_active = False
+        self.shapes = []
+        self.timers = {}
+        self.w, self.h = 400, 400
+        
+        self.create_widgets()
+        self.window.mainloop()
+    
+    def create_widgets(self):
+        # Верхняя панель
+        top = tk.Frame(self.window, height=50, bg="#2c3e50")
+        top.pack(fill="x", padx=5, pady=3)
+        self.start_btn = tk.Button(top, text="🎮 ИГРАТЬ", command=self.toggle, font=("Arial",12,"bold"), bg="#27ae60", fg="white")
+        self.start_btn.pack(side="left", padx=15, pady=8)
+        self.score_label = tk.Label(top, text="🏆 ОЧКИ: 0", font=("Arial",14,"bold"), bg="#2c3e50", fg="white")
+        self.score_label.pack(side="right", padx=15, pady=8)
+
+if __name__ == "__main__":
+    ShapeGame()
