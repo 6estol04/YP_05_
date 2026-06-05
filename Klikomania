@@ -15,6 +15,22 @@ class ShapeGame:
         self.timers = {}
         self.w, self.h = 400, 400
         
+        # Загрузка данных фигур из файла или создание новых
+        try:
+            with open('shapes.json', 'r') as f:
+                data = json.load(f)
+                self.all_shapes = data["shapes"]
+        except FileNotFoundError:
+            self.all_shapes = [
+                {"id":1,"name":"Зеленый квадрат","type":"square","color":"green","clicks":2,"points":10,"unlocked":1,"cost":0,"rate":6000,"life":5000,"size":70},
+                {"id":2,"name":"Красный круг","type":"circle","color":"red","clicks":3,"points":25,"unlocked":0,"cost":100,"rate":5500,"life":4500,"size":70},
+                {"id":3,"name":"Синий треугольник","type":"triangle","color":"blue","clicks":4,"points":40,"unlocked":0,"cost":250,"rate":5000,"life":4000,"size":70},
+                {"id":4,"name":"Желтый ромб","type":"diamond","color":"yellow","clicks":5,"points":60,"unlocked":0,"cost":500,"rate":4500,"life":3500,"size":70},
+                {"id":5,"name":"Фиолетовый круг","type":"circle","color":"purple","clicks":6,"points":85,"unlocked":0,"cost":800,"rate":4000,"life":3000,"size":40},
+                {"id":6,"name":"Оранжевый квадрат","type":"square","color":"orange","clicks":7,"points":120,"unlocked":0,"cost":1200,"rate":3500,"life":2500,"size":40}
+            ]
+        
+        self.unlocked = [s for s in self.all_shapes if s["unlocked"]]
         self.create_widgets()
         self.window.mainloop()
     
@@ -26,6 +42,31 @@ class ShapeGame:
         self.start_btn.pack(side="left", padx=15, pady=8)
         self.score_label = tk.Label(top, text="🏆 ОЧКИ: 0", font=("Arial",14,"bold"), bg="#2c3e50", fg="white")
         self.score_label.pack(side="right", padx=15, pady=8)
-
-if __name__ == "__main__":
-    ShapeGame()
+        
+        # Основная область
+        main = tk.Frame(self.window)
+        main.pack(fill="both", expand=True, padx=5, pady=3)
+        
+        # Левая панель
+        left = tk.Frame(main, width=220, bg="#ecf0f1")
+        left.pack(side="left", fill="y", padx=(0,3))
+        left.pack_propagate(False)
+        tk.Label(left, text="ВИДЫ ФИГУР", font=("Arial",12,"bold"), bg="#34495e", fg="white").pack(fill="x", pady=(0,8))
+        self.left_canvas, self.left_frame = self.make_scrollable(left, "#ecf0f1", 200)
+        
+        # Игровое поле
+        center = tk.Frame(main, bg="#34495e")
+        center.pack(side="left", fill="both", expand=True)
+        self.canvas = tk.Canvas(center, bg="#2c3e50", highlightthickness=0)
+        self.canvas.pack(fill="both", expand=True, padx=2, pady=2)
+        self.canvas.bind("<Configure>", lambda e: (setattr(self,'w',e.width), setattr(self,'h',e.height), self.show_start()))
+        
+        # Правая панель
+        right = tk.Frame(main, width=250, bg="#ecf0f1")
+        right.pack(side="right", fill="y", padx=(3,0))
+        right.pack_propagate(False)
+        tk.Label(right, text="🏪 МАГАЗИН ФИГУР", font=("Arial",12,"bold"), bg="#34495e", fg="white").pack(fill="x", pady=(0,8))
+        self.shop_canvas, self.shop_frame = self.make_scrollable(right, "#ecf0f1", 230)
+        
+        self.show_start()
+        self.update_lists()
