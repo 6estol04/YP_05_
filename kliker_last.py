@@ -22,11 +22,11 @@ class ShapeGame:
                 self.all_shapes = data["shapes"]
         except FileNotFoundError:
             self.all_shapes = [
-                {"id":1,"name":"Зеленый квадрат","type":"square","color":"green","clicks":2,"points":10,"unlocked":1,"cost":0,"rate":6000,"life":3000,"size":70},
-                {"id":2,"name":"Красный круг","type":"circle","color":"red","clicks":3,"points":25,"unlocked":0,"cost":50,"rate":5500,"life":2500,"size":70},
-                {"id":3,"name":"Синий треугольник","type":"triangle","color":"blue","clicks":4,"points":40,"unlocked":0,"cost":150,"rate":5000,"life":2500,"size":70},
-                {"id":4,"name":"Желтый ромб","type":"diamond","color":"yellow","clicks":5,"points":60,"unlocked":0,"cost":350,"rate":4500,"life":2000,"size":70},
-                {"id":5,"name":"Фиолетовый круг","type":"circle","color":"purple","clicks":6,"points":85,"unlocked":0,"cost":400,"rate":4000,"life":2000,"size":40},
+                {"id":1,"name":"Зеленый квадрат","type":"square","color":"green","clicks":2,"points":10,"unlocked":1,"cost":0,"rate":4000,"life":3000,"size":70},
+                {"id":2,"name":"Красный круг","type":"circle","color":"red","clicks":3,"points":25,"unlocked":0,"cost":50,"rate":3500,"life":2500,"size":70},
+                {"id":3,"name":"Синий треугольник","type":"triangle","color":"blue","clicks":4,"points":40,"unlocked":0,"cost":150,"rate":3000,"life":2500,"size":70},
+                {"id":4,"name":"Желтый ромб","type":"diamond","color":"yellow","clicks":5,"points":60,"unlocked":0,"cost":350,"rate":2500,"life":2000,"size":70},
+                {"id":5,"name":"Фиолетовый круг","type":"circle","color":"purple","clicks":6,"points":85,"unlocked":0,"cost":400,"rate":3000,"life":2000,"size":40},
                 {"id":6,"name":"Оранжевый квадрат","type":"square","color":"orange","clicks":7,"points":120,"unlocked":0,"cost":450,"rate":3500,"life":1500,"size":40}
             ]
         
