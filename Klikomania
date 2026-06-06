@@ -22,12 +22,12 @@ class ShapeGame:
                 self.all_shapes = data["shapes"]
         except FileNotFoundError:
             self.all_shapes = [
-                {"id":1,"name":"Зеленый квадрат","type":"square","color":"green","clicks":2,"points":10,"unlocked":1,"cost":0,"rate":6000,"life":5000,"size":70},
-                {"id":2,"name":"Красный круг","type":"circle","color":"red","clicks":3,"points":25,"unlocked":0,"cost":100,"rate":5500,"life":4500,"size":70},
-                {"id":3,"name":"Синий треугольник","type":"triangle","color":"blue","clicks":4,"points":40,"unlocked":0,"cost":250,"rate":5000,"life":4000,"size":70},
-                {"id":4,"name":"Желтый ромб","type":"diamond","color":"yellow","clicks":5,"points":60,"unlocked":0,"cost":500,"rate":4500,"life":3500,"size":70},
-                {"id":5,"name":"Фиолетовый круг","type":"circle","color":"purple","clicks":6,"points":85,"unlocked":0,"cost":800,"rate":4000,"life":3000,"size":40},
-                {"id":6,"name":"Оранжевый квадрат","type":"square","color":"orange","clicks":7,"points":120,"unlocked":0,"cost":1200,"rate":3500,"life":2500,"size":40}
+                {"id":1,"name":"Зеленый квадрат","type":"square","color":"green","clicks":2,"points":10,"unlocked":1,"cost":0,"rate":6000,"life":3000,"size":70},
+                {"id":2,"name":"Красный круг","type":"circle","color":"red","clicks":3,"points":25,"unlocked":0,"cost":50,"rate":5500,"life":2500,"size":70},
+                {"id":3,"name":"Синий треугольник","type":"triangle","color":"blue","clicks":4,"points":40,"unlocked":0,"cost":150,"rate":5000,"life":2500,"size":70},
+                {"id":4,"name":"Желтый ромб","type":"diamond","color":"yellow","clicks":5,"points":60,"unlocked":0,"cost":350,"rate":4500,"life":2000,"size":70},
+                {"id":5,"name":"Фиолетовый круг","type":"circle","color":"purple","clicks":6,"points":85,"unlocked":0,"cost":400,"rate":4000,"life":2000,"size":40},
+                {"id":6,"name":"Оранжевый квадрат","type":"square","color":"orange","clicks":7,"points":120,"unlocked":0,"cost":450,"rate":3500,"life":1500,"size":40}
             ]
         
         self.unlocked = [s for s in self.all_shapes if s["unlocked"]]
@@ -115,7 +115,7 @@ class ShapeGame:
             self.create_shape()
     
     def create_shape(self):
-        if not self.game_active or len(self.shapes) >= 10 or not self.unlocked:
+        if not self.game_active or len(self.shapes) >= 15 or not self.unlocked:
             if self.game_active: self.window.after(1500, self.create_shape)
             return
         
@@ -133,7 +133,7 @@ class ShapeGame:
         self.canvas.tag_bind(tid, "<Button-1>", lambda e: self.click(sid))
         
         if self.game_active:
-            self.window.after(max(2000, min(random.randint(d["rate"]-1000, d["rate"]+1000), 8000)), self.create_shape)
+            self.window.after(max(800, min(random.randint(d["rate"]-1000, d["rate"]+1000), 8000)), self.create_shape)
     
     def click(self, sid):
         if not self.game_active: return
@@ -208,8 +208,14 @@ class ShapeGame:
                 self.unlocked.append(s)
                 self.score -= cost
                 self.score_label.config(text=f"🏆 ОЧКИ: {self.score}")
+                
+                # Уменьшаем rate у всех разблокированных фигур
+                for shape in self.unlocked:
+                    shape["rate"] = max(2500, int(shape["rate"] * 0.9))
+                
                 self.update_lists()
-                with open('shapes.json','w') as f: json.dump({"shapes":self.all_shapes}, f, indent=2)
+                with open('shapes.json', 'w') as f:
+                    json.dump({"shapes": self.all_shapes}, f, indent=2)
                 self.msg(f"🎉 Фигура '{s['name']}' куплена!")
                 break
     
