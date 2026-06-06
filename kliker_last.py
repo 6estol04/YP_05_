@@ -1,0 +1,228 @@
+import tkinter as tk
+import random
+import json
+
+class ShapeGame:
+    def __init__(self):
+        self.window = tk.Tk()
+        self.window.title("ФИГУРНЫЙ КЛИКЕР")
+        self.window.geometry("900x650")
+        self.window.resizable(False, False)
+        
+        self.score = 0
+        self.game_active = False
+        self.shapes = []
+        self.timers = {}
+        self.w, self.h = 400, 400
+        
+        # Загрузка данных фигур из файла или создание новых
+        try:
+            with open('shapes.json', 'r') as f:
+                data = json.load(f)
+                self.all_shapes = data["shapes"]
+        except FileNotFoundError:
+            self.all_shapes = [
+                {"id":1,"name":"Зеленый квадрат","type":"square","color":"green","clicks":2,"points":10,"unlocked":1,"cost":0,"rate":6000,"life":3000,"size":70},
+                {"id":2,"name":"Красный круг","type":"circle","color":"red","clicks":3,"points":25,"unlocked":0,"cost":50,"rate":5500,"life":2500,"size":70},
+                {"id":3,"name":"Синий треугольник","type":"triangle","color":"blue","clicks":4,"points":40,"unlocked":0,"cost":150,"rate":5000,"life":2500,"size":70},
+                {"id":4,"name":"Желтый ромб","type":"diamond","color":"yellow","clicks":5,"points":60,"unlocked":0,"cost":350,"rate":4500,"life":2000,"size":70},
+                {"id":5,"name":"Фиолетовый круг","type":"circle","color":"purple","clicks":6,"points":85,"unlocked":0,"cost":400,"rate":4000,"life":2000,"size":40},
+                {"id":6,"name":"Оранжевый квадрат","type":"square","color":"orange","clicks":7,"points":120,"unlocked":0,"cost":450,"rate":3500,"life":1500,"size":40}
+            ]
+        
+        self.unlocked = [s for s in self.all_shapes if s["unlocked"]]
+        self.create_widgets()
+        self.window.mainloop()
+    
+    def create_widgets(self):
+        # Верхняя панель
+        top = tk.Frame(self.window, height=50, bg="#2c3e50")
+        top.pack(fill="x", padx=5, pady=3)
+        self.start_btn = tk.Button(top, text="🎮 ИГРАТЬ", command=self.toggle, font=("Arial",12,"bold"), bg="#27ae60", fg="white")
+        self.start_btn.pack(side="left", padx=15, pady=8)
+        self.score_label = tk.Label(top, text="🏆 ОЧКИ: 0", font=("Arial",14,"bold"), bg="#2c3e50", fg="white")
+        self.score_label.pack(side="right", padx=15, pady=8)
+        
+        # Основная область
+        main = tk.Frame(self.window)
+        main.pack(fill="both", expand=True, padx=5, pady=3)
+        
+        # Левая панель
+        left = tk.Frame(main, width=220, bg="#ecf0f1")
+        left.pack(side="left", fill="y", padx=(0,3))
+        left.pack_propagate(False)
+        tk.Label(left, text="ВИДЫ ФИГУР", font=("Arial",12,"bold"), bg="#34495e", fg="white").pack(fill="x", pady=(0,8))
+        self.left_canvas, self.left_frame = self.make_scrollable(left, "#ecf0f1", 200)
+        
+        # Игровое поле
+        center = tk.Frame(main, bg="#34495e")
+        center.pack(side="left", fill="both", expand=True)
+        self.canvas = tk.Canvas(center, bg="#2c3e50", highlightthickness=0)
+        self.canvas.pack(fill="both", expand=True, padx=2, pady=2)
+        self.canvas.bind("<Configure>", lambda e: (setattr(self,'w',e.width), setattr(self,'h',e.height), self.show_start()))
+        
+        # Правая панель
+        right = tk.Frame(main, width=250, bg="#ecf0f1")
+        right.pack(side="right", fill="y", padx=(3,0))
+        right.pack_propagate(False)
+        tk.Label(right, text="🏪 МАГАЗИН ФИГУР", font=("Arial",12,"bold"), bg="#34495e", fg="white").pack(fill="x", pady=(0,8))
+        self.shop_canvas, self.shop_frame = self.make_scrollable(right, "#ecf0f1", 230)
+        
+        self.show_start()
+        self.update_lists()
+    
+    def make_scrollable(self, parent, bg, width):
+        canvas = tk.Canvas(parent, bg=bg, highlightthickness=0)
+        scroll = tk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+        frame = tk.Frame(canvas, bg=bg)
+        canvas.create_window((0,0), window=frame, anchor="nw", width=width)
+        frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.configure(yscrollcommand=scroll.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+        return canvas, frame
+    
+    def draw(self, d, x, y):
+        s = d["size"]
+        shapes = {
+            "square": lambda: self.canvas.create_rectangle(x, y, x+s, y+s, fill=d["color"], outline="black", width=2),
+            "circle": lambda: self.canvas.create_oval(x, y, x+s, y+s, fill=d["color"], outline="black", width=2),
+            "triangle": lambda: self.canvas.create_polygon(x+s//2,y, x,y+s, x+s,y+s, fill=d["color"], outline="black", width=2),
+            "diamond": lambda: self.canvas.create_polygon(x+s//2,y, x+s,y+s//2, x+s//2,y+s, x,y+s//2, fill=d["color"], outline="black", width=2)
+        }
+        return shapes.get(d["type"], shapes["circle"])()
+    
+    def show_start(self):
+        self.canvas.delete("start")
+        self.canvas.create_text(self.w//2, self.h//2,
+            text="🎮 НАЖМИТЕ 'ИГРАТЬ'\nЧТОБЫ НАЧАТЬ!\n\n👆 Кликайте по фигурам\n💰 Зарабатывайте очки\n🏪 Покупайте новые фигуры",
+            font=("Arial",16), fill="#bdc3c7", justify="center", anchor="center", tags="start")
+    
+    def toggle(self):
+        if self.game_active:
+            self.game_active = False
+            self.start_btn.config(text="🎮 ИГРАТЬ", bg="#27ae60")
+            for sid, tid, _ in self.shapes:
+                self.canvas.delete(sid); self.canvas.delete(tid)
+            for t in self.timers.values(): self.window.after_cancel(t)
+            self.shapes = []; self.timers = {}
+            self.show_start()
+        else:
+            self.game_active = True
+            self.start_btn.config(text="⏸️ СТОП", bg="#e74c3c")
+            self.canvas.delete("all")
+            self.shapes = []; self.timers = {}
+            self.create_shape()
+    
+    def create_shape(self):
+        if not self.game_active or len(self.shapes) >= 15 or not self.unlocked:
+            if self.game_active: self.window.after(1500, self.create_shape)
+            return
+        
+        d = random.choices(self.unlocked, weights=[8000/d["rate"] for d in self.unlocked])[0]
+        x = max(20, min(random.randint(self.w//2-150, self.w//2+50), self.w-d["size"]-20))
+        y = max(20, min(random.randint(self.h//2-150, self.h//2+50), self.h-d["size"]-20))
+        
+        sid = self.draw(d, x, y)
+        tid = self.canvas.create_text(x+d["size"]//2, y+d["size"]//2, text=f"0/{d['clicks']}", font=("Arial",9 if d["size"]<50 else 11,"bold"), fill="white")
+        timer = self.window.after(d["life"], lambda: self.remove(sid))
+        
+        self.shapes.append((sid, tid, {"id":d["id"],"clicks":0,"req":d["clicks"],"pts":d["points"],"x":x,"y":y,"size":d["size"]}))
+        self.timers[sid] = timer
+        self.canvas.tag_bind(sid, "<Button-1>", lambda e: self.click(sid))
+        self.canvas.tag_bind(tid, "<Button-1>", lambda e: self.click(sid))
+        
+        if self.game_active:
+            self.window.after(max(800, min(random.randint(d["rate"]-1000, d["rate"]+1000), 8000)), self.create_shape)
+    
+    def click(self, sid):
+        if not self.game_active: return
+        for i, (s, t, info) in enumerate(self.shapes):
+            if s == sid and not info.get("done"):
+                info["clicks"] += 1
+                self.canvas.itemconfig(t, text=f"{info['clicks']}/{info['req']}")
+                if info["clicks"] >= info["req"]:
+                    info["done"] = True
+                    self.score += info["pts"]
+                    self.score_label.config(text=f"🏆 ОЧКИ: {self.score}")
+                    self.canvas.itemconfig(s, fill="gold", outline="orange", width=3)
+                    pt = self.canvas.create_text(info["x"]+info["size"]//2, info["y"]-15, text=f"+{info['pts']}", font=("Arial",12,"bold"), fill="#27ae60")
+                    self.window.after(750, lambda: self.canvas.delete(pt))
+                    if sid in self.timers:
+                        self.window.after_cancel(self.timers[sid])
+                        del self.timers[sid]
+                    self.window.after(300, lambda i=i: self.remove_shape(i))
+                break
+    
+    def remove_shape(self, idx):
+        if idx < len(self.shapes):
+            sid, tid, _ = self.shapes[idx]
+            self.canvas.delete(sid); self.canvas.delete(tid)
+            del self.shapes[idx]
+    
+    def remove(self, sid):
+        for i, (s, _, _) in enumerate(self.shapes):
+            if s == sid: self.remove_shape(i); break
+    
+    def update_lists(self):
+        # Очистка панелей
+        for w in self.left_frame.winfo_children(): w.destroy()
+        for w in self.shop_frame.winfo_children(): w.destroy()
+        
+        # Левая панель - разблокированные фигуры
+        for s in self.unlocked:
+            f = tk.Frame(self.left_frame, bg="#ecf0f1", relief="solid", borderwidth=1)
+            f.pack(fill="x", pady=3, padx=3)
+            tk.Label(f, text=s['name'], font=("Arial",10,"bold"), bg="#ecf0f1").pack(anchor="w", padx=5, pady=(3,0))
+            tk.Label(f, text=f"Нажми {s['clicks']} раз", font=("Arial",9), bg="#ecf0f1").pack(anchor="w", padx=5)
+            tk.Label(f, text=f"Живет: {s['life']//1000} сек", font=("Arial",9), bg="#ecf0f1", fg="#e74c3c").pack(anchor="w", padx=5)
+            tk.Label(f, text=f"Награда: {s['points']} очков", font=("Arial",9), bg="#ecf0f1", fg="#27ae60").pack(anchor="w", padx=5, pady=(0,3))
+        
+        # Правая панель - магазин (заблокированные фигуры)
+        locked = [s for s in self.all_shapes if not s["unlocked"]]
+        if not locked:
+            tk.Label(self.shop_frame, text="🎉 ВСЕ ФИГУРЫ КУПЛЕНЫ!", font=("Arial",12,"bold"), bg="#ecf0f1", fg="#27ae60").pack(pady=20)
+        else:
+            for s in locked:
+                f = tk.Frame(self.shop_frame, bg="white", relief="solid", borderwidth=1)
+                f.pack(fill="x", pady=3, padx=3)
+                tk.Label(f, text=s['name'], font=("Arial",10,"bold"), bg="white").pack(anchor="w", padx=5, pady=(3,0))
+                tk.Label(f, text="Условие: ????", font=("Arial",9), bg="white").pack(anchor="w", padx=5)
+                tk.Label(f, text=f"Живет: {s['life']//1000} сек", font=("Arial",9), bg="white", fg="#e74c3c").pack(anchor="w", padx=5)
+                tk.Label(f, text=f"Награда: {s['points']} очков", font=("Arial",9), bg="white", fg="#27ae60").pack(anchor="w", padx=5)
+                btn = tk.Button(f, text=f"💰 Купить: {s['cost']}", font=("Arial",9,"bold"), bg="#e74c3c", fg="white", 
+                               command=lambda sid=s['id'], c=s['cost']: self.buy(sid, c))
+                btn.pack(fill="x", padx=5, pady=5)
+        
+        # Обновление прокрутки
+        self.left_canvas.configure(scrollregion=self.left_canvas.bbox("all"))
+        self.shop_canvas.configure(scrollregion=self.shop_canvas.bbox("all"))
+    
+    def buy(self, sid, cost):
+        if self.score < cost:
+            self.msg(f"Недостаточно очков!\nНужно: {cost}\nУ вас: {self.score}")
+            return
+        for s in self.all_shapes:
+            if s["id"] == sid and not s["unlocked"]:
+                s["unlocked"] = 1
+                self.unlocked.append(s)
+                self.score -= cost
+                self.score_label.config(text=f"🏆 ОЧКИ: {self.score}")
+                
+                # Уменьшаем rate у всех разблокированных фигур
+                for shape in self.unlocked:
+                    shape["rate"] = max(2500, int(shape["rate"] * 0.9))
+                
+                self.update_lists()
+                with open('shapes.json', 'w') as f:
+                    json.dump({"shapes": self.all_shapes}, f, indent=2)
+                self.msg(f"🎉 Фигура '{s['name']}' куплена!")
+                break
+    
+    def msg(self, text):
+        lbl = tk.Label(self.window, text=text, font=("Arial",11), bg="#34495e", fg="white")
+        lbl.place(relx=0.5, rely=0.5, anchor="center")
+        self.window.after(2000, lbl.destroy)
+
+if __name__ == "__main__":
+    ShapeGame()
