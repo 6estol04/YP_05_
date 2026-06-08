@@ -15,7 +15,7 @@ class ShapeGame:
         self.timers = {}
         self.w, self.h = 400, 400
         
-        # Загрузка данных фигур из файла или создание новых
+        # загрузка данных фигур из файла
         try:
             with open('shapes.json', 'r') as f:
                 data = json.load(f)
@@ -35,7 +35,7 @@ class ShapeGame:
         self.window.mainloop()
     
     def create_widgets(self):
-        # Верхняя панель
+        # верхняя панель
         top = tk.Frame(self.window, height=50, bg="#2c3e50")
         top.pack(fill="x", padx=5, pady=3)
         self.start_btn = tk.Button(top, text="🎮 ИГРАТЬ", command=self.toggle, font=("Arial",12,"bold"), bg="#27ae60", fg="white")
@@ -43,18 +43,18 @@ class ShapeGame:
         self.score_label = tk.Label(top, text="🏆 ОЧКИ: 0", font=("Arial",14,"bold"), bg="#2c3e50", fg="white")
         self.score_label.pack(side="right", padx=15, pady=8)
         
-        # Основная область
+        # основная область
         main = tk.Frame(self.window)
         main.pack(fill="both", expand=True, padx=5, pady=3)
         
-        # Левая панель
+        # левая панель
         left = tk.Frame(main, width=220, bg="#ecf0f1")
         left.pack(side="left", fill="y", padx=(0,3))
         left.pack_propagate(False)
         tk.Label(left, text="ВИДЫ ФИГУР", font=("Arial",12,"bold"), bg="#34495e", fg="white").pack(fill="x", pady=(0,8))
         self.left_canvas, self.left_frame = self.make_scrollable(left, "#ecf0f1", 200)
         
-        # Игровое поле
+        # игровое поле
         center = tk.Frame(main, bg="#34495e")
         center.pack(side="left", fill="both", expand=True)
         self.canvas = tk.Canvas(center, bg="#2c3e50", highlightthickness=0)
@@ -169,7 +169,7 @@ class ShapeGame:
         for w in self.left_frame.winfo_children(): w.destroy()
         for w in self.shop_frame.winfo_children(): w.destroy()
         
-        # Левая панель - разблокированные фигуры
+        # левая панель - разблокированные фигуры
         for s in self.unlocked:
             f = tk.Frame(self.left_frame, bg="#ecf0f1", relief="solid", borderwidth=1)
             f.pack(fill="x", pady=3, padx=3)
@@ -178,7 +178,7 @@ class ShapeGame:
             tk.Label(f, text=f"Живет: {s['life']//1000} сек", font=("Arial",9), bg="#ecf0f1", fg="#e74c3c").pack(anchor="w", padx=5)
             tk.Label(f, text=f"Награда: {s['points']} очков", font=("Arial",9), bg="#ecf0f1", fg="#27ae60").pack(anchor="w", padx=5, pady=(0,3))
         
-        # Правая панель - магазин (заблокированные фигуры)
+        # правая панель - магазин заблокированные фигуры
         locked = [s for s in self.all_shapes if not s["unlocked"]]
         if not locked:
             tk.Label(self.shop_frame, text="🎉 ВСЕ ФИГУРЫ КУПЛЕНЫ!", font=("Arial",12,"bold"), bg="#ecf0f1", fg="#27ae60").pack(pady=20)
@@ -194,9 +194,6 @@ class ShapeGame:
                                command=lambda sid=s['id'], c=s['cost']: self.buy(sid, c))
                 btn.pack(fill="x", padx=5, pady=5)
         
-        # Обновление прокрутки
-        self.left_canvas.configure(scrollregion=self.left_canvas.bbox("all"))
-        self.shop_canvas.configure(scrollregion=self.shop_canvas.bbox("all"))
     
     def buy(self, sid, cost):
         if self.score < cost:
@@ -209,7 +206,7 @@ class ShapeGame:
                 self.score -= cost
                 self.score_label.config(text=f"🏆 ОЧКИ: {self.score}")
                 
-                # Уменьшаем rate у всех разблокированных фигур
+                # уменьшение rate у всех разблокированных фигур
                 for shape in self.unlocked:
                     shape["rate"] = max(2500, int(shape["rate"] * 0.9))
                 
